@@ -5,5 +5,7 @@
     <Project Path="src/OrdersDomain/OrdersDomain.csproj" Id="2513d356-939c-4883-9aea-ab17e877b7ef" />
     <Project Path="src/OrdersInfrastructure/OrdersInfrastructure.csproj" Id="2ba5cbe3-335f-4c70-9cf1-2d88861fc5f6" />
   </Folder>
-  <Folder Name="/test/" />
+  <Folder Name="/test/">
+    <Project Path="test/OrdersTest/OrdersTest.csproj" Id="0a5020ba-02b4-4602-ae22-8549cd59c9d7" />
+  </Folder>
 </Solution>
