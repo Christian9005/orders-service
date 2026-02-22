@@ -3,7 +3,7 @@ using OrdersApplication.DTOs;
 
 namespace OrdersApplication.Commands;
 
-public class CreateOrderCommand : IRequest<OrderResponse>
+public class CreateOrderCommand : IRequest<ApiResponse<OrderResponse>>
 {
     public int ClienteId { get; set; }
     public string Usuario { get; set; }
