@@ -40,7 +40,7 @@ public class JwtTokenProvider : IJwtTokenProvider
     {
         try
         {
-            var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(_settings.SecretKey));
+            var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(settings.SecretKey));
 
             var handler = new JwtSecurityTokenHandler();
             var principal = handler.ValidateToken(token, new TokenValidationParameters
