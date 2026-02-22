@@ -43,8 +43,8 @@ public class OrderContext : DbContext
             .Property(od => od.Price)
             .HasColumnType("decimal(18,2)");
 
-        modelBuilder.Entity<AuditLog>()
-            .HasIndex(al => al.Id);
+        modelBuilder.Entity<OrderDetail>()
+            .Ignore(od => od.Subtotal);
 
         modelBuilder.Entity<AuditLog>()
             .HasIndex(al => al.RequestId);

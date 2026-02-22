@@ -5,6 +5,7 @@ using OrdersInfrastructure.Context;
 using OrdersInfrastructure.Interfaces;
 using OrdersInfrastructure.Persistence;
 using OrdersInfrastructure.Repositories;
+using OrdersInfrastructure.Security;
 
 namespace OrdersInfrastructure.Extensions;
 
@@ -18,8 +19,17 @@ public static class InfrastructureExtension
 
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
-
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        var jwtSettings = new JwtSettings
+        {
+            SecretKey = configuration["JwtSettings:SecretKey"]!,
+            Issuer = configuration["JwtSettings:Issuer"]!,
+            Audience = configuration["JwtSettings:Audience"]!,
+            ExpirationMinutes = int.Parse(configuration["JwtSettings:ExpirationMinutes"] ?? "60")
+        };
+        services.AddSingleton(jwtSettings);
+        services.AddScoped<IJwtTokenProvider, JwtTokenProvider>();
 
         return services;
     }
