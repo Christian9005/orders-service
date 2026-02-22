@@ -6,4 +6,14 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="MediatR" Version="14.0.0" />
+    <PackageReference Include="Polly" Version="8.6.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\OrdersDomain\OrdersDomain.csproj" />
+    <ProjectReference Include="..\OrdersInfrastructure\OrdersInfrastructure.csproj" />
+  </ItemGroup>
+
 </Project>
