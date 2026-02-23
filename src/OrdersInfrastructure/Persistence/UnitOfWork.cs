@@ -22,6 +22,8 @@ public class UnitOfWork : IUnitOfWork
     public IAuditLogRepository AuditLogs =>
         this.auditLogRepository ??= new AuditLogRepository(context);
 
+    public OrderContext Context => context;
+
     public async Task<bool> BeginTransactionAsync()
     {
         this.transaction = await context.Database.BeginTransactionAsync();

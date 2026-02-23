@@ -10,12 +10,8 @@ public class OrderDetail
     public decimal Subtotal => Quantity * Price;
     public Order Order { get; private set; }
     private OrderDetail() { }
-    public static OrderDetail Create(int orderId, int productId, int quantity, decimal price)
+    public static OrderDetail Create(int productId, int quantity, decimal price)
     {
-        if (orderId <= 0)
-        {
-            throw new ArgumentException("OrderId debe ser mayor a 0", nameof(orderId));
-        }
         if (productId <= 0)
         {
             throw new ArgumentException("ProductId debe ser mayor a 0", nameof(productId));
@@ -31,7 +27,6 @@ public class OrderDetail
 
         return new OrderDetail
         {
-            OrderId = orderId,
             ProductId = productId,
             Quantity = quantity,
             Price = price

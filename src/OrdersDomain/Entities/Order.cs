@@ -53,7 +53,7 @@ public class Order
             throw new ArgumentException("Precio no puede ser negativo", nameof(price));
         }
 
-        var detail = OrderDetail.Create(this.Id, productId, quantity, price);
+        var detail = OrderDetail.Create(productId, quantity, price);
         Details.Add(detail);
 
         RecalculateTotal();

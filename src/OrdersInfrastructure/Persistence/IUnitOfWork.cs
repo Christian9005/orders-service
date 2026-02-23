@@ -1,4 +1,5 @@
-﻿using OrdersInfrastructure.Interfaces;
+﻿using OrdersInfrastructure.Context;
+using OrdersInfrastructure.Interfaces;
 
 namespace OrdersInfrastructure.Persistence;
 
@@ -6,6 +7,7 @@ public interface IUnitOfWork : IDisposable
 {
     IOrderRepository Orders { get; }
     IAuditLogRepository AuditLogs { get; }
+    OrderContext Context { get; }
 
     Task<int> SaveChangesAsync();
     Task<bool> BeginTransactionAsync();

@@ -1,10 +1,13 @@
 ﻿using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OrdersApplication.DTOs;
 using OrdersApplication.Services;
 using OrdersDomain.Entities;
 using OrdersDomain.Exceptions;
+using OrdersInfrastructure.Context;
 using OrdersInfrastructure.Persistence;
+using Polly;
 
 namespace OrdersApplication.Commands.Handlers;
 
@@ -62,54 +65,60 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Api
                     "INVALID_CLIENT");
             }
 
-            // 4. Initialize order creation
-            await unitOfWork.BeginTransactionAsync();
-
-            try
+            ApiResponse<OrderResponse> result = null;
+            var strategy = unitOfWork.Context.Database.CreateExecutionStrategy();
+            await strategy.ExecuteAsync(async () =>
             {
-                // 5. Create order and details
-                var order = Order.Create(
-                    request.ClienteId,
-                    request.Usuario,
-                    request.RequestId,
-                    request.IdempotencyKey);
+                // 4. Initialize order creation
+                await unitOfWork.BeginTransactionAsync();
 
-                foreach (var item in request.Items)
+                try
                 {
-                    order.AddDetail(item.ProductoId, item.Cantidad, item.Precio);
+                    // 5. Create order and details
+                    var order = Order.Create(
+                        request.ClienteId,
+                        request.Usuario,
+                        request.RequestId,
+                        request.IdempotencyKey);
+
+                    foreach (var item in request.Items)
+                    {
+                        order.AddDetail(item.ProductoId, item.Cantidad, item.Precio);
+                    }
+
+                    // 6. Validate order
+                    order.Validate();
+
+                    order.MarkAsProcessed();
+
+                    // 7. Save order
+                    await unitOfWork.Orders.AddAsync(order);
+                    await unitOfWork.CommitAsync();
+
+                    await LogAudit(order.Id, request.RequestId, request.Usuario,
+                        "Order_Created", $"Order created successfully. Total: {order.Total}");
+
+                    logger.LogInformation(
+                        "Order created successfully. OrderId: {OrderId}, RequestId: {RequestId}",
+                        order.Id, order.RequestId);
+
+                    order.MarkAsCompleted();
+                    await unitOfWork.Orders.UpdateAsync(order);
+                    await unitOfWork.SaveChangesAsync();
+
+                    result = ApiResponse<OrderResponse>.Ok(
+                        OrderResponse.FromEntity(order),
+                        "Order created successfully",
+                        request.RequestId);
                 }
+                catch (Exception ex)
+                {
+                    await unitOfWork.RollbackAsync();
+                    throw;
+                }
+            });
 
-                // 6. Validate order
-                order.Validate();
-
-                order.MarkAsProcessed();
-
-                // 7. Save order
-                await unitOfWork.Orders.AddAsync(order);
-                await unitOfWork.CommitAsync();
-
-                await LogAudit(order.Id, request.RequestId, request.Usuario,
-                    "Order_Created", $"Order created successfully. Total: {order.Total}");
-
-                logger.LogInformation(
-                    "Order created successfully. OrderId: {OrderId}, RequestId: {RequestId}",
-                    order.Id, order.RequestId);
-
-                order.MarkAsCompleted();
-                await unitOfWork.Orders.UpdateAsync(order);
-                await unitOfWork.SaveChangesAsync();
-
-                return ApiResponse<OrderResponse>.Ok(
-                    OrderResponse.FromEntity(order),
-                    "Order created successfully",
-                    request.RequestId);
-            }
-            catch (Exception ex)
-            {
-                await unitOfWork.RollbackAsync();
-                throw;
-            }
-
+            return result;
         }
         catch (DomainException domainEx)
         {

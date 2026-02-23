@@ -1,6 +1,8 @@
+using Microsoft.IdentityModel.Tokens;
 using OrdersApi.Middlewares;
 using OrdersApplication.Extensions;
 using OrdersInfrastructure.Extensions;
+using OrdersInfrastructure.Security;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -22,11 +24,35 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
 
-var app = builder.Build();
+var jwtSettings = new JwtSettings
+{
+    SecretKey = builder.Configuration["JwtSettings:SecretKey"]!,
+    Issuer = builder.Configuration["JwtSettings:Issuer"]!,
+    Audience = builder.Configuration["JwtSettings:Audience"]!,
+    ExpirationMinutes = int.Parse(builder.Configuration["JwtSettings:ExpirationMinutes"] ?? "60")
+};
 
-app.UseRequestIdMiddleware();
-app.UseIdempotencyMiddleware();
-app.UseExceptionHandlingMiddleware();
+builder.Services.AddAuthentication("Bearer")
+    .AddJwtBearer("Bearer", options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(
+                System.Text.Encoding.UTF8.GetBytes(jwtSettings.SecretKey)),
+            ValidateIssuer = true,
+            ValidIssuer = jwtSettings.Issuer,
+            ValidateAudience = true,
+            ValidAudience = jwtSettings.Audience,
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.Zero
+        };
+        options.MapInboundClaims = false;
+    });
+
+builder.Services.AddAuthorization();
+
+var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -37,7 +63,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseRequestIdMiddleware();
+app.UseIdempotencyMiddleware();
+app.UseExceptionHandlingMiddleware();
 
 app.MapControllers();
 

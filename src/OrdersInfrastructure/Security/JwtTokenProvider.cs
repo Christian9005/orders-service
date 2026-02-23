@@ -20,8 +20,8 @@ public class JwtTokenProvider : IJwtTokenProvider
 
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.NameIdentifier, clientId.ToString()),
-            new Claim(ClaimTypes.Name, user),
+            new Claim(JwtRegisteredClaimNames.Sub, clientId.ToString()),
+            new Claim(JwtRegisteredClaimNames.Name, user),
             new Claim("RequestId", requestId.ToString())
         };
 
